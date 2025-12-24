@@ -111,7 +111,7 @@ class SimplexMethod:
                     print("This problem has INFEASIBLE solution!\n")
                     solution = False
                 
-            for i, x in enumerate(self.variables):
+            for i, x in enumerate(self.variables[:-1]):
                 if x not in self.Xb:
                     if np.isclose(Cj_Zj[i], 0):
                         print("This problem has Multi-Optimal solution!\n")
