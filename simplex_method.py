@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-class simplex_method:
+class SimplexMethod:
 
     def __init__(self, obj_func, coefs, signs, rhs, max=True, big_m = 1e12):
         self.obj_func = np.array(obj_func)
@@ -57,30 +57,30 @@ class simplex_method:
         self.Cj = np.zeros(n_total_var)                         # Initializing the Objective Function Coefficients
         self.Cj[:self.n_decision_var] = self.obj_func           # Fill Decision Variables Coefficients
 
-        auxil_col_idx = [i for i in range(self.n_decision_var, n_total_var)]
+        available_idx = [i for i in range(self.n_decision_var, n_total_var)]
         for i, row in enumerate(self.tableau):
 
             if self.signs[i] == '<=':
-                row[auxil_col_idx[0]] = 1                           # Add "Slack" to the enquality
-                self.Xb[i] = self.variables[auxil_col_idx[0]]       # Track Base Variables columns
-                auxil_col_idx.pop(0)
+                row[available_idx[0]] = 1                           # Add "Slack" to the enquality
+                self.Xb[i] = self.variables[available_idx[0]]       # Track Base Variables columns
+                available_idx.pop(0)
 
             elif self.signs[i] == '>=':
-                row[auxil_col_idx[0]] = -1                          # Add "Surplus" to the enquality
-                auxil_col_idx.pop(0)
+                row[available_idx[0]] = -1                          # Add "Surplus" to the enquality
+                available_idx.pop(0)
 
-                row[auxil_col_idx[-1]] = 1                          # Add "Artificial" to the enquality
-                self.Cj[auxil_col_idx[-1]] = self.m
+                row[available_idx[-1]] = 1                          # Add "Artificial" to the enquality
+                self.Cj[available_idx[-1]] = self.m
                 self.Cb[i] = self.m
-                self.Xb[i] = self.variables[auxil_col_idx[-1]]
-                auxil_col_idx.pop(-1)
+                self.Xb[i] = self.variables[available_idx[-1]]
+                available_idx.pop(-1)
 
             elif self.signs[i] == '=':
-                row[auxil_col_idx[-1]] = 1                          # Add "Artificial" to the enquality
-                self.Cj[auxil_col_idx[-1]] = self.m
+                row[available_idx[-1]] = 1                          # Add "Artificial" to the enquality
+                self.Cj[available_idx[-1]] = self.m
                 self.Cb[i] = self.m
-                self.Xb[i] = self.variables[auxil_col_idx[-1]]
-                auxil_col_idx.pop(-1)
+                self.Xb[i] = self.variables[available_idx[-1]]
+                available_idx.pop(-1)
 
     def pivot(self, pivot_row_i, pivot_col_i):
         pivot_element = self.tableau[pivot_row_i, pivot_col_i]
@@ -103,15 +103,20 @@ class simplex_method:
 
         # Check for optimality
         if (self.isMax and np.all(Cj_Zj <= 1e-9)) or (not self.isMax and np.all(Cj_Zj >= -1e-9)):
-            
+
+            solution = True
             # Check Infeasibility (Artificial and Positive Value)
             for i, Xb in enumerate(self.Xb):
                 if ("a" in Xb) and (self.tableau[i, -1] > 0): 
                     print("This problem has INFEASIBLE solution!\n")
-                    self._print_solve(False)
-                    return
+                    solution = False
+                
+            for i, x in enumerate(self.variables):
+                if x not in self.Xb:
+                    if np.isclose(Cj_Zj[i], 0):
+                        print("This problem has Multi-Optimal solution!\n")
 
-            self._print_solve()
+            self._print_solve(solution)
             return
         
         # Find pivot column
@@ -131,7 +136,6 @@ class simplex_method:
             print("This problem has UNBOUNDED solution!")
             self._print_solve(False)
             return
-
         pivot_row_i = np.argmin(ratios)
         
         self.pivot(pivot_row_i, pivot_col_i)
