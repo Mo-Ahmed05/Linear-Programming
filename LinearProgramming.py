@@ -133,7 +133,7 @@ class SimplexMethod:
                 ratios.append(np.inf)
 
         if np.all(np.isinf(ratios)):
-            print("This problem has UNBOUNDED solution!")
+            print("This problem has UNBOUNDED solutions!")
             self._print_solve(False)
             return
         pivot_row_i = np.argmin(ratios)
