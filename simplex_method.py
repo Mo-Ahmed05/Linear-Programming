@@ -31,13 +31,17 @@ class simplex_method:
 
         # Number of "New Variables" (slack + surplus + artificial)
         for sign in self.signs:
-            if sign == '<=':    n_slack += 1        # 1 slack
-            elif sign == '>=':  n_surplus += 2      # 1 surplus, 1 artificial
-            elif sign == '=':   n_artificial += 1   # 1 artificial
+            if sign == '<=':    
+                n_slack += 1
+            elif sign == '>=':
+                n_surplus += 1
+                n_artificial += 1
+            elif sign == '=':   
+                n_artificial += 1
 
         self.variables = [f'X{i}' for i in range(1, self.n_decision_var+1)]
         self.variables += [f'S{i}' for i in range(1, n_slack+n_surplus+1)]
-        self.variables += [f'a{i}' for i in range(1, n_artificial+1)] + ['b']
+        self.variables += [f'a{i}' for i in range(1, n_artificial+1)] + ['RHS']
 
         # Number of total variables
         n_total_var = self.n_decision_var + n_slack + n_surplus + n_artificial
@@ -57,25 +61,25 @@ class simplex_method:
         for i, row in enumerate(self.tableau):
 
             if self.signs[i] == '<=':
-                row[auxil_col_idx[0]] = 1                               # Add "Slack" to the enquality
-                self.Xb[i] = self.variables[auxil_col_idx[0]]           # Track Base Variables columns
+                row[auxil_col_idx[0]] = 1                           # Add "Slack" to the enquality
+                self.Xb[i] = self.variables[auxil_col_idx[0]]       # Track Base Variables columns
                 auxil_col_idx.pop(0)
 
             elif self.signs[i] == '>=':
-                row[auxil_col_idx[0]] = -1                              # Add "Surplus" to the enquality
+                row[auxil_col_idx[0]] = -1                          # Add "Surplus" to the enquality
                 auxil_col_idx.pop(0)
 
-                row[auxil_col_idx[-1]] = 1                              # Add "Artificial" to the enquality
+                row[auxil_col_idx[-1]] = 1                          # Add "Artificial" to the enquality
                 self.Cj[auxil_col_idx[-1]] = self.m
                 self.Cb[i] = self.m
-                self.Xb[i] = self.variables[auxil_col_idx[-1]]          # Track Base Variables columns
+                self.Xb[i] = self.variables[auxil_col_idx[-1]]
                 auxil_col_idx.pop(-1)
 
             elif self.signs[i] == '=':
-                row[auxil_col_idx[-1]] = 1                              # Add "Artificial" to the enquality
+                row[auxil_col_idx[-1]] = 1                          # Add "Artificial" to the enquality
                 self.Cj[auxil_col_idx[-1]] = self.m
                 self.Cb[i] = self.m
-                self.Xb[i] = self.variables[auxil_col_idx[-1]]          # Track Base Variables columns
+                self.Xb[i] = self.variables[auxil_col_idx[-1]]
                 auxil_col_idx.pop(-1)
 
     def pivot(self, pivot_row_i, pivot_col_i):
@@ -94,12 +98,8 @@ class simplex_method:
     def solve(self):
         self.tableau_history.append(pd.DataFrame(np.copy(self.tableau), index=self.Xb, columns=self.variables))
 
-        Zj = np.zeros(len(self.Cj) + 1)
-
-        for i, row in enumerate(self.tableau):
-            Zj += self.Cb[i] * row              # Multiply each Cb by its row
-
-        Cj_Zj = self.Cj - Zj[:-1]
+        Zj = np.dot(self.Cb, self.tableau[:, :-1])
+        Cj_Zj = self.Cj - Zj
 
         # Check for optimality
         if (self.isMax and np.all(Cj_Zj <= 1e-9)) or (not self.isMax and np.all(Cj_Zj >= -1e-9)):
@@ -150,8 +150,9 @@ class simplex_method:
             for i in range(self.n_decision_var):
                 val = 0.0
                 if f'X{i+1}' in self.Xb:
-                    val = rhs_values[i]
+                    row_i = self.Xb.index(f'X{i+1}')
+                    val = rhs_values[row_i]
                 print(f'  X{i+1} = {val}')
 
             z_text = 'Maximum' if self.isMax else 'Minimum'
-            print(f'{z_text} value = {np.sum(np.dot(self.Cb, rhs_values))}')
+            print(f'{z_text} value = {np.dot(self.Cb, rhs_values)}')

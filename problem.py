@@ -9,4 +9,3 @@ rhs = [150, 100, 80]
 simplex_problem = simplex_method(obj_func=objective_func, coefs=coefs,
                                  signs=signs, rhs=rhs, max=True)
 simplex_problem.solve()
-simplex_problem.problem()
