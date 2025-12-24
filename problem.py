@@ -1,4 +1,4 @@
-from simplex_method import SimplexMethod
+from LinearProgramming import SimplexMethod
 
 objective_func = [12, 8]
 
