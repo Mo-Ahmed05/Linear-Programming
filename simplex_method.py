@@ -30,11 +30,10 @@ class simplex_method:
         n_slack, n_surplus, n_artificial = 0, 0, 0
 
         # Number of "New Variables" (slack + surplus + artificial)
-        auxil_vars = 0
         for sign in self.signs:
-            if sign == '<=':    n_slack += 1  # 1 slack
-            elif sign == '>=':  n_surplus += 2  # 1 surplus, 1 artificial
-            elif sign == '=':   n_artificial += 1  # 1 artificial
+            if sign == '<=':    n_slack += 1        # 1 slack
+            elif sign == '>=':  n_surplus += 2      # 1 surplus, 1 artificial
+            elif sign == '=':   n_artificial += 1   # 1 artificial
 
         self.variables = [f'X{i}' for i in range(1, self.n_decision_var+1)]
         self.variables += [f'S{i}' for i in range(1, n_slack+n_surplus+1)]
@@ -126,9 +125,9 @@ class simplex_method:
                 ratio = row[-1] / row[pivot_col_i]
                 ratios.append(ratio)
             else:
-                ratios.append(np.nan)
+                ratios.append(np.inf)
 
-        if np.all(np.isnan(ratios)):
+        if np.all(np.isinf(ratios)):
             print("This problem has UNBOUNDED solution!")
             self._print_solve(False)
             return
