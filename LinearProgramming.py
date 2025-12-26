@@ -43,7 +43,7 @@ class SimplexMethod:
 
         self.variables = [f'X{i}' for i in range(1, self.n_decision_var+1)]
         self.variables += [f'S{i}' for i in range(1, n_slack+n_surplus+1)]
-        self.variables += [f'a{i}' for i in range(1, n_artificial+1)] + ['RHS']
+        self.variables += [f'A{i}' for i in range(1, n_artificial+1)] + ['RHS']
 
         # Number of total variables
         n_total_var = self.n_decision_var + n_slack + n_surplus + n_artificial
@@ -112,7 +112,7 @@ class SimplexMethod:
             solution = True
             # Check Infeasibility (Artificial and Positive Value)
             for i, Xb in enumerate(self.Xb):
-                if ("a" in Xb) and (self.tableau[i, -1] > 0): 
+                if ("A" in Xb) and (self.tableau[i, -1] > 0): 
                     print("This problem has INFEASIBLE solution!\n")
                     solution = False
                 
