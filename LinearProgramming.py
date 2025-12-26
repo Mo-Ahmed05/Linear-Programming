@@ -3,19 +3,21 @@ import pandas as pd
 
 class SimplexMethod:
 
-    def __init__(self, obj_func, coefs, signs, rhs, max=True, big_m = 1e12):
+    def __init__(self, obj_func, constraints, max=True, big_m = 1e17):
+
         self.obj_func = np.array(obj_func)
-        self.coefs = np.array(coefs, dtype=float)
-        self.signs = signs
-        self.rhs = rhs
+        self.constraints = np.array(constraints)
+        self.coefs = self.constraints[:,:-2].astype(float)
+        self.signs = self.constraints[:,-2]
+        self.rhs = self.constraints[:,-1].astype(float)
 
         self.isMax = max
         self.m = -big_m if max else big_m
 
-        self.Xb = [0]*len(coefs)
-        self.n_decision_var = len(coefs[0])
+        self.Xb = [0]*len(self.coefs)
+        self.n_decision_var = len(self.coefs[0])
 
-        self.Cb = np.zeros(len(coefs), dtype=float)
+        self.Cb = np.zeros(len(self.coefs), dtype=float)
         self.Cj = None
         self.tableau = None
         self.variables = []
@@ -96,10 +98,13 @@ class SimplexMethod:
         self.Xb[pivot_row_i] = self.variables[pivot_col_i]   # Update the Xb Variables column
 
     def solve(self):
-        self.tableau_history.append(pd.DataFrame(np.copy(self.tableau), index=self.Xb, columns=self.variables))
 
-        Zj = np.dot(self.Cb, self.tableau[:, :-1])
-        Cj_Zj = self.Cj - Zj
+        Zj = np.dot(self.Cb, self.tableau)
+        Cj_Zj = self.Cj - Zj[:-1]
+        
+        rows = pd.DataFrame(np.vstack((Zj.round(3), Cj_Zj.round(3).tolist()+[''])), index=['Zj','Cj-Zj'], columns=self.variables)
+        tableau = pd.DataFrame(np.copy(self.tableau), index=self.Xb, columns=self.variables)
+        self.tableau_history.append(pd.concat([tableau.round(3), rows]))
 
         # Check for optimality
         if (self.isMax and np.all(Cj_Zj <= 1e-9)) or (not self.isMax and np.all(Cj_Zj >= -1e-9)):
@@ -143,8 +148,8 @@ class SimplexMethod:
 
     def _print_solve(self, has_solution=True):
         
-        for i in range(len(self.tableau_history)):
-            print(self.tableau_history[i])
+        for i, tableau in enumerate(self.tableau_history):
+            print(tableau)
             if i != len(self.tableau_history)-1:
                 print(f'pivot column: {self.pivot_history[i][1]+1}   pivot row: {self.pivot_history[i][0]+1} \n')
 
