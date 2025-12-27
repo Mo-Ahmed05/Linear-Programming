@@ -113,13 +113,14 @@ class SimplexMethod:
             # Check Infeasibility (Artificial and Positive Value)
             for i, Xb in enumerate(self.Xb):
                 if ("A" in Xb) and (self.tableau[i, -1] > 0): 
-                    print("This problem has INFEASIBLE solution!\n")
+                    print("\nThis problem has INFEASIBLE solution!\n")
                     solution = False
+                    break
                 
             for i, x in enumerate(self.variables[:-1]):
                 if x not in self.Xb:
                     if np.isclose(Cj_Zj[i], 0):
-                        print("This problem has Multi-Optimal solution!\n")
+                        print("\nThis problem has Multi-Optimal solution!\n")
 
             self._print_solve(solution)
             return
@@ -138,7 +139,7 @@ class SimplexMethod:
                 ratios.append(np.inf)
 
         if np.all(np.isinf(ratios)):
-            print("This problem has UNBOUNDED solutions!")
+            print("\nThis problem has UNBOUNDED solutions!\n")
             self._print_solve(False)
             return
         pivot_row_i = np.argmin(ratios)
@@ -164,4 +165,5 @@ class SimplexMethod:
                 print(f'  X{i+1} = {val}')
 
             z_text = 'Maximum' if self.isMax else 'Minimum'
-            print(f'{z_text} value = {np.dot(self.Cb, rhs_values)}')
+            print(f'{z_text} value = {np.dot(self.Cb, rhs_values)}\n')
+        print('\n')
