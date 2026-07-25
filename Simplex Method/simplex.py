@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-class SimplexMethod:
+class SimplexSolver:
 
     def __init__(self, obj_func, constraints, max=True, big_m = 1e17):
 
